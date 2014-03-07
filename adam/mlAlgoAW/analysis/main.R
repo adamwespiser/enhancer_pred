@@ -24,7 +24,7 @@ library(vcd) # mosaicpl
 library(C50) # kuhn:411
 library(mda) # fda, kuhn:362
 library(gam)
-library(reshape2)
+library(reshape2) # needed for melt
 registerDoParallel(10)
 
 
@@ -110,5 +110,10 @@ main <- function(){
   
   cat("... one brain\n\n...and now for you, Mr. Lion")
   main.heart()
-  cat("... one heart!")
+  cat("... one heart! now forebrain...")
+  main.foreforebrain()
+  cat("...and we are done!")
+  
+  
+  
 }
