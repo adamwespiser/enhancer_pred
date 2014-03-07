@@ -1,6 +1,7 @@
-
-mouse.heart.table <<- "/Users/adam/Dropbox/enhancer_predictions/mouse_heart_master_table_raw_scores.tab"
-mouse.brain.table <<- "/Users/adam/Dropbox/enhancer_predictions/mouse_brain_master_table_raw_scores.tab"
+homeFolder <- path.expand("~")
+dataFolder <- file.path(homeFolder, "Dropbox", "enhancer_predictions")
+mouse.heart.table <- file.path(dataFolder, "mouse_heart_master_table_raw_scores.tab")
+mouse.brain.table <- file.path(dataFolder, "mouse_brain_master_table_raw_scores.tab")
 
 
 cleanMouseHeart <- function(mouse.file=mouse.heart.table){

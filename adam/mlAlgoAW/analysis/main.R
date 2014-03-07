@@ -23,6 +23,7 @@ library(gbm)
 library(vcd) # mosaicpl
 library(C50) # kuhn:411
 library(mda) # fda, kuhn:362
+library(reshape)
 
 calcNumCores <- function(){
   numCores <- detectCores()
@@ -59,7 +60,7 @@ main.heart <- function(){
   
   
   # exploritory analysis of hearts data
-  exploritoryPlots(df=heart.df, cols=getHeartCols(), outdir=heart.plots.dir,msg="Heart Data -> explore")
+  exploritoryPlots(df=heart.df, cols=getHeartCols(), outdir=heart.plots.dir, msg="Heart Data -> explore")
   
   # run algorithms "trials" number of times -> save result
   heart.ml.df <- accumMlAlgos(df=heart.df,cols=getHeartCols(),
