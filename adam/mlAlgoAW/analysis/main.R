@@ -1,5 +1,11 @@
+script.dir <- function() {
+  # from http://stackoverflow.com/a/16046056
+  dirname(sys.frame(1)$ofile)
+}
+print(script.dir())
+
 ### Start with project dir, and helper functions
-projectDir <<- "/Users/adam/Dropbox/enhancer_predictions/mlAlgoAW/"
+projectDir <- file.path(script.dir(), "..")
 getFullPath <- function(projectPath){ paste(projectDir,projectPath,sep="/") }
 exportAsTable <- function(df, file){ write.table(df,file=file,quote=FALSE, row.names=FALSE,sep="\t") }
 clear <- function(save.vec=c()){ ls.vec <- ls(globalenv());del.vec <-setdiff(ls.vec,c(save.vec,"clear")); rm(list=del.vec,pos=globalenv())}
