@@ -11,6 +11,22 @@ clear <- function(save.vec=c()){ ls.vec <- ls(globalenv());del.vec <-setdiff(ls.
 readInTable <- function(file) read.table(file=file,stringsAsFactors=FALSE,header=TRUE)
 
 
+# setup libs
+# install.packages("ggplot2")  
+# install.packages("ROCR") # http://cran.r-project.org/web/packages/ROCR/index.html
+# install.packages("glmnet") # http://cran.r-project.org/web/packages/glmnet/glmnet.pdf  
+# install.packages("randomForest") #http://cran.at.r-project.org/web/packages/randomForest/randomForest.pdf
+# install.packages("doParallel")
+# install.packages("foreach")
+# install.packages("mboost")
+# install.packages("gbm")
+# install.packages("vcd") # mosaicpl
+# install.packages("C50") # kuhn:411
+# install.packages("mda") # fda, kuhn:362
+# install.packages("gam")
+# install.packages("reshape2")
+# install.packages("MASS")
+
 #load libs
 library(ggplot2)  
 library(ROCR) # http://cran.r-project.org/web/packages/ROCR/index.html
@@ -25,6 +41,7 @@ library(C50) # kuhn:411
 library(mda) # fda, kuhn:362
 library(gam)
 library(reshape2)
+library(MASS)
 
 calcNumCores <- function(){
   numCores <- detectCores()
