@@ -61,13 +61,13 @@ runMlAlgos <- function(df,cols){
   df$label_factor <- factor(df$label)
   
   glm.boost <- getStatsFromGlmModel(predict(
-    glmboost(formula(form.boost), data = df, family = Binomial(link="logit")), 
+    glmboost(formula(form.boost), data = df[train,], family = Binomial(link="logit")), 
     df[-train,], 
     type="response"),
     y.test)
   
   gam.boost <- getStatsFromGlmModel(predict(
-    gamboost(formula(form.boost), data = df, family = Binomial(link="logit")), 
+    gamboost(formula(form.boost), data = df[train,], family = Binomial(link="logit")), 
     df[-train,], 
     type="response"),
     y.test)
@@ -82,20 +82,21 @@ runMlAlgos <- function(df,cols){
 
 runMlAlgosListVersion <- function(df,cols){
   #   cols <- names(df)[8:22]
-  train <<- sample(seq_along(df$label), 0.7*dim(df)[1])
-  train.X <- as.matrix(df[train,cols])
-  test.X <- as.matrix(df[-train,cols])
-  y.train <- df$label[train]
-  y.test <- df$label[-train]
-  y.freq0 <- length(which(y.train == 0))/length(y.train)
-  y.freq1 <- length(which(y.train == 1))/length(y.train)
-  weight.train <<- ifelse(y.train== 1, 1/y.freq1, 1/y.freq0) 
+  trainVec <- sample(seq_along(df$label), 0.7*dim(df)[1])
+  trainVecForGlm <- trainVec
+  trainVec.X <- as.matrix(df[trainVec,cols])
+  test.X <- as.matrix(df[-trainVec,cols])
+  y.trainVec <- df$label[trainVec]
+  y.test <- df$label[-trainVec]
+  y.freq0 <- length(which(y.trainVec == 0))/length(y.trainVec)
+  y.freq1 <- length(which(y.trainVec == 1))/length(y.trainVec)
+  weight.trainVec <<- ifelse(y.trainVec== 1, 1/y.freq1, 1/y.freq0) 
   grid = 10 ^ seq(10, -2, length = 100)
   scaleDistro <- TRUE
   
   form <- paste("label ~   ",do.call(paste, c(as.list(cols), sep=" + ")))
-  glm.main <- glm(form , data=df, family = binomial,subset=train)
-  glm.main.stats = getStatsFromGlmModel(predict(glm.main,df[-train,], type="response"), as.numeric(df$label[-train]) - 1) 
+  glm.main <- glm(form , data=df[trainVec,], family = binomial)
+  glm.main.stats = getStatsFromGlmModel(predict(glm.main,df[-trainVec,], type="response"), as.numeric(df$label[-trainVec]) - 1) 
   
   form.cross <- paste("label ~", do.call(paste, c(as.list(do.call(paste, c(expand.grid(cols, cols), sep=":"))), sep=" + ")))
   
@@ -105,78 +106,85 @@ runMlAlgosListVersion <- function(df,cols){
   
   # use this formula
   
-  algo.list <- list(glm.cross.weights.stats = getStatsFromGlmModel(predict(glm(form.cross, data = df[train,], family=binomial, weights = weight.train),
-                                                                           df[-train,], type="response"), y.test) ,
+  algo.list <- list(glm.cross.weights.stats = getStatsFromGlmModel(predict(glm(form.cross, data = df[trainVec,], family=binomial, weights = weight.trainVec),
+                                                                           df[-trainVec,], type="response"), y.test) ,
                     
-                    glm.cross.stats = getStatsFromGlmModel(predict(glm(form.cross, data = df, family=binomial,subset = train) ,
-                                                                   df[-train,], type="response"), y.test) ,
-                    
-                    
-                    lda.stats = getStatsFromGlmModel(predict(lda(x=train.X,grouping=y.train),test.X,type="response")$x,y.test),
-                    qda.stats = getStatsFromGlmModel(predict(qda(x=train.X,grouping=y.train),test.X,type="response")$posterior[,2],y.test),
+                    glm.cross.stats = getStatsFromGlmModel(predict(glm(form.cross, data = df[trainVec,], family=binomial ) ,
+                                                                   df[-trainVec,], type="response"), y.test) ,
                     
                     
-                    ridge.weight.stats = getStatsFromGlmModel( predict(glmnet(train.X,y.train,family="binomial", alpha=0, lambda=grid,weights=weight.train,standardize=scaleDistro),
-                                                                       s=cv.glmnet(train.X,y.train,family="binomial",type.measure="auc", alpha=0,standardize=scaleDistro)$lambda.min,
+                    lda.stats = getStatsFromGlmModel(predict(lda(x=trainVec.X,grouping=y.trainVec),test.X,type="response")$x,y.test),
+                    qda.stats = getStatsFromGlmModel(predict(qda(x=trainVec.X,grouping=y.trainVec),test.X,type="response")$posterior[,2],y.test),
+                    
+                    
+                    ridge.weight.stats = getStatsFromGlmModel( predict(glmnet(trainVec.X,y.trainVec,family="binomial", alpha=0, lambda=grid,weights=weight.trainVec,standardize=scaleDistro),
+                                                                       s=cv.glmnet(trainVec.X,y.trainVec,family="binomial",type.measure="auc", alpha=0,standardize=scaleDistro)$lambda.min,
                                                                        newx=test.X, type="response")  , 
                                                                y.test),
-                    ridge.stats = getStatsFromGlmModel( predict(glmnet(train.X,y.train,family="binomial", alpha=0, lambda=grid,standardize=scaleDistro),
-                                                                s=cv.glmnet(train.X,y.train,family="binomial",type.measure="auc", alpha=0,standardize=scaleDistro)$lambda.min,
+                    ridge.stats = getStatsFromGlmModel( predict(glmnet(trainVec.X,y.trainVec,family="binomial", alpha=0, lambda=grid,standardize=scaleDistro),
+                                                                s=cv.glmnet(trainVec.X,y.trainVec,family="binomial",type.measure="auc", alpha=0,standardize=scaleDistro)$lambda.min,
                                                                 newx=test.X, type="response")  , 
                                                         y.test),
-                    lasso.weight.stats = getStatsFromGlmModel( predict(glmnet(train.X,y.train,family="binomial", alpha=1, lambda=grid,weights=weight.train,standardize=scaleDistro),
-                                                                       s=cv.glmnet(train.X,y.train,family="binomial",type.measure="auc", alpha=1,standardize=scaleDistro)$lambda.min,
+                    lasso.weight.stats = getStatsFromGlmModel( predict(glmnet(trainVec.X,y.trainVec,family="binomial", alpha=1, lambda=grid,weights=weight.trainVec,standardize=scaleDistro),
+                                                                       s=cv.glmnet(trainVec.X,y.trainVec,family="binomial",type.measure="auc", alpha=1,standardize=scaleDistro)$lambda.min,
                                                                        newx=test.X, type="response")  , 
                                                                y.test),
                     
-                    lasso.stats = getStatsFromGlmModel( predict(glmnet(train.X,y.train,family="binomial", alpha=1, lambda=grid,standardize=scaleDistro),
-                                                                s=cv.glmnet(train.X,y.train,family="binomial",type.measure="auc", alpha=1,standardize=scaleDistro)$lambda.min,
+                    lasso.stats = getStatsFromGlmModel( predict(glmnet(trainVec.X,y.trainVec,family="binomial", alpha=1, lambda=grid,standardize=scaleDistro),
+                                                                s=cv.glmnet(trainVec.X,y.trainVec,family="binomial",type.measure="auc", alpha=1,standardize=scaleDistro)$lambda.min,
                                                                 newx=test.X, type="response")  , 
                                                         y.test),
                     
-                    random.forest = getStatsFromGlmModel( as.numeric(predict(randomForest(y=factor(y.train),x=df[train,cols]),df[-train,cols])) - 1,
+                    random.forest = getStatsFromGlmModel( as.numeric(predict(randomForest(y=factor(y.trainVec),x=df[trainVec,cols]),df[-trainVec,cols])) - 1,
                                                           y.test),
                     
-                    random.forest.bag = getStatsFromGlmModel( as.numeric(predict(randomForest(y=factor(y.train),x=df[train,cols],mtry=length(cols),importance=TRUE),
-                                                                                  df[-train,cols])) - 1,
+                    random.forest.bag = getStatsFromGlmModel( as.numeric(predict(randomForest(y=factor(y.trainVec),x=df[trainVec,cols],mtry=length(cols),importance=TRUE),
+                                                                                  df[-trainVec,cols])) - 1,
                                                                y.test),
+                    
+                    
+                    gam = getStatsFromGlmModel(predict(
+                      gam(formula(form), data = df[trainVec,], family = binomial), 
+                      df[-trainVec,], 
+                      type="response"),
+                      y.test) , 
                     
                     
                     glm.boost = getStatsFromGlmModel(predict(
-                      glmboost(formula(form.boost), data = df, family = Binomial(link="logit")), 
-                      df[-train,], 
+                      glmboost(formula(form.boost), data = df[trainVec,], family = Binomial(link="logit")), 
+                      df[-trainVec,], 
                       type="response"),
                       y.test),
                     
                     gam.boost = getStatsFromGlmModel(predict(
-                      gamboost(formula(form.boost), data = df, family = Binomial(link="logit")), 
-                      df[-train,], 
+                      gamboost(formula(form.boost), data = df[trainVec,], family = Binomial(link="logit")), 
+                      df[-trainVec,], 
                       type="response"),
                       y.test), 
                     
                     gbm.boost.depth4 = getStatsFromGlmModel(predict(
-                      gbm(formula(form), data = df[train,], distribution="bernoulli", cv.folds=7,
+                      gbm(formula(form), data = df[trainVec,], distribution="bernoulli", cv.folds=7,
                           n.trees=1000, interaction.depth=4,verbose=FALSE), 
-                      df[-train,], 
+                      df[-trainVec,], 
                       type="response",n.trees=1000),
                       y.test),
                     
                     gbm.boost.depth2 = getStatsFromGlmModel(predict(
-                        gbm(formula(form), data = df[train,], distribution="bernoulli", cv.folds=7, 
+                        gbm(formula(form), data = df[trainVec,], distribution="bernoulli", cv.folds=7, 
                             n.trees=1000, interaction.depth=2,verbose=FALSE), 
-                        df[-train,], 
+                        df[-trainVec,], 
                         type="response",n.trees=1000),
                         y.test),
                    
                     C5.0.boost = getStatsFromGlmModel(predict(
-                       C5.0(formula(form.boost), data = df[train,],trials=100), 
-                            newdata=df[-train,], type="prob",trials=5)[,2],
+                       C5.0(formula(form.boost), data = df[trainVec,],trials=100), 
+                            newdata=df[-trainVec,], type="prob",trials=5)[,2],
                        y.test),
                     
                     
                     flex.disc.anyl = getStatsFromGlmModel(predict(
-                      fda(formula(form), data=df[train,]),
-                            newdata=df[-train,], type="posterior")[,2],
+                      fda(formula(form), data=df[trainVec,]),
+                            newdata=df[-trainVec,], type="posterior")[,2],
                       y.test)
                     
   ) # END for algo.list
@@ -201,7 +209,7 @@ accumMlAlgos <- function(df,cols,trials,resultFile,seed=42){
   collect.df <- do.call(rbind,foreach(i = 1:trials) %dopar% {
     print(paste("trial = " ,i,sep=""))
     
-    tryCatch({df.out <-runMlAlgosListVersion(df,cols)
+    tryCatch({df.out <- runMlAlgosListVersion(df,cols)
               df.out$trial <- i
               #df.accum <- rbind(df.out, df.accum)},
               df.out},
@@ -217,4 +225,14 @@ accumMlAlgos <- function(df,cols,trials,resultFile,seed=42){
 
 
 
+# eval errors w/ test case
+
+irisExample <- function(){
+  train = sample(seq_along(iris[,1]),0.7*dim(iris)[1])
+  iris$label <- ifelse(iris$Species == "setosa", 1, 0)
+  form <- "label ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width"
+  glm(formula = form, family = binomial, data = iris[train, ])
+  
+  glm(formula = form, family = binomial, data = iris, subset = train)
+}
 

@@ -40,7 +40,7 @@ exploritoryPlots <- function(df, cols, outdir, msg=""){
   df$tissueExpr <- ifelse(df$label == 0, "negative", "positive")
   melt.df <- melt(df[c(c("original_species", "tissueExpr"),cols)], id.vars=c("tissueExpr", "original_species")) 
  
-  pdf(paste(outdir, "explore-Cov.pdf", sep="/"))
+  pdf(paste(outdir, "explore-Mosaic.pdf", sep="/"))
   mosaicplot(~ original_species + tissueExpr, data = df, color=2:3,main=paste("area ~ count",msg,sep="\n"))
   dev.off()
   

@@ -2,7 +2,7 @@ script.dir <- function() {
   # from http://stackoverflow.com/a/16046056
   dirname(sys.frame(1)$ofile)
 }
-
+ 
 ### Start with project dir, and helper functions
 projectDir <- normalizePath(file.path(script.dir(), ".."))
 getFullPath <- function(subpath){ file.path(projectDir, subpath) }
@@ -23,20 +23,9 @@ library(gbm)
 library(vcd) # mosaicpl
 library(C50) # kuhn:411
 library(mda) # fda, kuhn:362
+library(gam)
 library(reshape)
-
-calcNumCores <- function(){
-  numCores <- detectCores()
-  if(numCores > 8){
-    numCores <- 8
-  } else if(numCores == 1){
-    numCores <- 1
-  } else {
-    numCores <- numCores - 1
-  }
-  return(numCores)
-}
-registerDoParallel(calcNumCores())
+registerDoParallel(10)
 
 
 ## load in other libs
@@ -60,11 +49,13 @@ main.heart <- function(){
   
   
   # exploritory analysis of hearts data
-  exploritoryPlots(df=heart.df, cols=getHeartCols(), outdir=heart.plots.dir, msg="Heart Data -> explore")
+  exploritoryPlots(df=heart.df, cols=getHeartCols(), outdir=heart.plots.dir,msg="Heart Data -> explore")
   
   # run algorithms "trials" number of times -> save result
   heart.ml.df <- accumMlAlgos(df=heart.df,cols=getHeartCols(),
                               trials=30,resultFile=heart.mlresults)
+  
+  
   
   # plot the results of each ml algo on the test/training divisions
   plotMlresults(df=heart.ml.df, outdir = heart.plots.dir,msg="Heart data -> AW")
@@ -92,6 +83,27 @@ main.brain <- function(){
   plotMlresults(df=brain.ml.df, outdir = brain.plots.dir,msg="Brain data -> AW")
   
 }
+
+main.foreforebrain <- function(){
+  # forebrain
+  forebrain.data.dir <- makeDir(getFullPath("data/forebrain/"))
+  forebrain.mldata <- paste(forebrain.data.dir,"dataForPred.tab",sep="")
+  forebrain.mlresults <- paste(forebrain.data.dir,"mlResults.tab",sep="")
+  forebrain.plots.dir <- makeDir(getFullPath("plots/forebrain/"))
+  forebrain.df <- cleanMouseForebrain()
+  exportAsTable(df=forebrain.df, file=forebrain.mldata)
+  
+  # exploritory analysis of hearts data
+  exploritoryPlots(df=forebrain.df, cols=getForebrainCols(), outdir=forebrain.plots.dir,msg="Forebrain Data -> explore")
+  
+  # run algorithms "trials" number of times -> save result
+  forebrain.ml.df <- accumMlAlgos(df=forebrain.df,cols=getForebrainCols(),
+                                  trials=30,resultFile=forebrain.mlresults)
+  
+  # plot the results of each ml algo on the test/training divisions
+  plotMlresults(df=forebrain.ml.df, outdir = forebrain.plots.dir,msg="Forebrain data -> AW") 
+}
+
 main <- function(){
   cat("and now for you, Mr.ScareCrow, \n")
   main.brain();
@@ -100,4 +112,3 @@ main <- function(){
   main.heart()
   cat("... one heart!")
 }
-
