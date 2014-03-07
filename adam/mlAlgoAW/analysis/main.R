@@ -24,7 +24,7 @@ library(vcd) # mosaicpl
 library(C50) # kuhn:411
 library(mda) # fda, kuhn:362
 library(gam)
-library(reshape)
+library(reshape2)
 registerDoParallel(10)
 
 
