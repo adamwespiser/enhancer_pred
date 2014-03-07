@@ -25,7 +25,20 @@ library(C50) # kuhn:411
 library(mda) # fda, kuhn:362
 library(gam)
 library(reshape2)
-registerDoParallel(10)
+
+calcNumCores <- function(){
+  numCores <- detectCores()
+  if(numCores > 8){
+    numCores <- numCores / 2
+  } else if(numCores == 1){
+    numCores <- 1
+  } else {
+    numCores <- numCores - 1
+  }
+  cat("using", numCores, "cores")
+  return(numCores)
+}
+registerDoParallel(calcNumCores())
 
 
 ## load in other libs
