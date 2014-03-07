@@ -23,7 +23,19 @@ library(gbm)
 library(vcd) # mosaicpl
 library(C50) # kuhn:411
 library(mda) # fda, kuhn:362
-registerDoParallel(10)
+
+calcNumCores <- function(){
+  numCores <- detectCores()
+  if(numCores > 8){
+    numCores <- 8
+  } else if(numCores == 1){
+    numCores <- 1
+  } else {
+    numCores <- numCores - 1
+  }
+  return(numCores)
+}
+registerDoParallel(calcNumCores())
 
 
 ## load in other libs
