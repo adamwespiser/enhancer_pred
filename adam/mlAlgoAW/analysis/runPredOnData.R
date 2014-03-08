@@ -334,6 +334,32 @@ getBestGBMparams <- function(df,cols, outdir){
 }
 
 
+runGbmOnDataSet <- function(df,cols,outdir){
+  gbm.call <-  quote(gbm(formula(form), data = df, distribution="bernoulli", cv.folds=3, 
+               n.trees=100, interaction.depth=1,verbose=FALSE))
+  gbm.fn <- eval(gbm.call[[1]],parent.frame())
+  gbm.match <-  match.call(gbm.fn,gbm.call)
+  gbm.fn.string <- paste("gbm(",do.call(paste,c(as.list(paste0(names(gbm.match),"=",as.character(gbm.match))[-1]),sep=", "  )), ")",sep="")
+  
+    
+  ggplot(gbm.model.sum, aes(x=var,y=rel.inf))+geom_histogram(stat="identity") + coord_flip()+
+    ggtitle(gbm.fn.string)
+  ggsave(paste(outdir,"gbmRelImp.pdf",sep="/"))
+  
+  pdf(paste(outdir,"gbmError.pdf",sep="/"),width=7,height=7)
+  gbm.perf(gbm1)
+  dev.off()
+  
+  write(gbm.fn.string,file=paste(outdir,"gbmCall-Short.pdf",sep="/"))
+  
+  
+  fullCallFile <- file( paste(outdir,"gbmCall-fullSpecify.txt",sep="/"))
+  saveFunArgs(fnCall = gbm.match,verbose=FALSE,    file =paste(outdir,"gbmCall-fullSpecify.txt",sep="/"))
+  removeMaxFiles(paste(outdir,"gbmCall-fullSpecify.txt",sep="/"))
+  
+}
+
+
 # eval errors w/ test case
 
 irisExample <- function(){
