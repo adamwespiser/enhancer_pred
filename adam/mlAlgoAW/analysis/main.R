@@ -58,7 +58,7 @@ calcNumCores <- function(){
   cat("using", numCores, "cores")
   return(numCores)
 }
-registerDoParallel(calcNumCores())
+registerDoMC(calcNumCores())
 
 
 ## load in other libs
