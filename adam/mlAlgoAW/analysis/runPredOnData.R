@@ -246,7 +246,10 @@ accumMlAlgos <- function(df,cols,trials,resultFile,seed=42){
               df.out$trial <- i
               #df.accum <- rbind(df.out, df.accum)},
               df.out},
-             error = function(e) print("error in Log Reg routine"), finally=print(""))
+             error = function(e) {
+               print(e)
+               #stop(e)
+               }, finally=print(""))
   })
   # 
   if(!missing(resultFile)){

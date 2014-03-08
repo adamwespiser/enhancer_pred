@@ -11,6 +11,22 @@ clear <- function(save.vec=c()){ ls.vec <- ls(globalenv());del.vec <-setdiff(ls.
 readInTable <- function(file) read.table(file=file,stringsAsFactors=FALSE,header=TRUE)
 
 
+# setup libs
+# install.packages("ggplot2")  
+# install.packages("ROCR") # http://cran.r-project.org/web/packages/ROCR/index.html
+# install.packages("glmnet") # http://cran.r-project.org/web/packages/glmnet/glmnet.pdf  
+# install.packages("randomForest") #http://cran.at.r-project.org/web/packages/randomForest/randomForest.pdf
+# install.packages("doParallel")
+# install.packages("foreach")
+# install.packages("mboost")
+# install.packages("gbm")
+# install.packages("vcd") # mosaicpl
+# install.packages("C50") # kuhn:411
+# install.packages("mda") # fda, kuhn:362
+# install.packages("gam")
+# install.packages("reshape2")
+# install.packages("MASS")
+
 #load libs
 library(ggplot2)  
 library(ROCR) # http://cran.r-project.org/web/packages/ROCR/index.html
@@ -24,8 +40,27 @@ library(vcd) # mosaicpl
 library(C50) # kuhn:411
 library(mda) # fda, kuhn:362
 library(gam)
+<<<<<<< HEAD
 library(reshape2) # needed for melt
 registerDoParallel(10)
+=======
+library(reshape2)
+library(MASS)
+
+calcNumCores <- function(){
+  numCores <- detectCores()
+  if(numCores > 8){
+    numCores <- numCores / 2
+  } else if(numCores == 1){
+    numCores <- 1
+  } else {
+    numCores <- numCores - 1
+  }
+  cat("using", numCores, "cores")
+  return(numCores)
+}
+registerDoParallel(calcNumCores())
+>>>>>>> edb1c2a954eaa9c8b3ffcc59a2d1187b78dce6b2
 
 
 ## load in other libs
