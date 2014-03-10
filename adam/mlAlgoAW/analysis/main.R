@@ -2,7 +2,7 @@ script.dir <- function() {
   # from http://stackoverflow.com/a/16046056
   dirname(sys.frame(1)$ofile)
 }
- 
+
 ### Start with project dir, and helper functions
 projectDir <- normalizePath(file.path(script.dir(), ".."))
 getFullPath <- function(subpath){ file.path(projectDir, subpath) }
@@ -12,27 +12,30 @@ readInTable <- function(file) read.table(file=file,stringsAsFactors=FALSE,header
 
 
 # setup libs
-# install.packages("ggplot2")  
-# install.packages("ROCR") # http://cran.r-project.org/web/packages/ROCR/index.html
-# install.packages("glmnet") # http://cran.r-project.org/web/packages/glmnet/glmnet.pdf  
-# install.packages("randomForest") #http://cran.at.r-project.org/web/packages/randomForest/randomForest.pdf
-# install.packages("doParallel")
-# install.packages("foreach")
-# install.packages("mboost")
-# install.packages("gbm")
-# install.packages("vcd") # mosaicpl
-# install.packages("C50") # kuhn:411
-# install.packages("mda") # fda, kuhn:362
-# install.packages("gam")
-# install.packages("reshape2")
-# install.packages("MASS")
+list.of.packages <- c(
+    "ggplot2",
+    "ROCR", # http://cran.r-project.org/web/packages/ROCR/index.html
+    "glmnet", # http://cran.r-project.org/web/packages/glmnet/glmnet.pdf
+    "randomForest", #http://cran.at.r-project.org/web/packages/randomForest/randomForest.pdf
+    "doMC",
+    "foreach",
+    "mboost",
+    "gbm",
+    "vcd", # mosaicpl
+    "C50", # kuhn:411
+    "mda", # fda, kuhn:362
+    "gam",
+    "reshape2",
+    "MASS")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
 
 #load libs
-library(ggplot2)  
+library(ggplot2)
 library(ROCR) # http://cran.r-project.org/web/packages/ROCR/index.html
-library(glmnet) # http://cran.r-project.org/web/packages/glmnet/glmnet.pdf  
+library(glmnet) # http://cran.r-project.org/web/packages/glmnet/glmnet.pdf
 library(randomForest) #http://cran.at.r-project.org/web/packages/randomForest/randomForest.pdf
-library(doParallel)
+library(doMC)
 library(foreach)
 library(mboost)
 library(gbm)
@@ -41,8 +44,12 @@ library(C50) # kuhn:411
 library(mda) # fda, kuhn:362
 library(gam)
 library(reshape2) # needed for melt
+<<<<<<< HEAD
 library(reshape2)
 library(MASS)
+=======
+library(MASS) # needed for lda
+>>>>>>> 247e683bfac25d63bc5cad44e96a8bc93363469a
 
 calcNumCores <- function(){
   numCores <- detectCores()
@@ -56,8 +63,13 @@ calcNumCores <- function(){
   cat("using", numCores, "cores")
   return(numCores)
 }
+<<<<<<< HEAD
 #registerDoParallel(calcNumCores())
 registerDoParallel(10)
+=======
+registerDoMC(calcNumCores())
+
+>>>>>>> 247e683bfac25d63bc5cad44e96a8bc93363469a
 
 ## load in other libs
 source(getFullPath("analysis/dataInput.R"))
@@ -77,20 +89,20 @@ main.heart <- function(){
   heart.plots.dir <- makeDir(getFullPath("plots/heart/"))
   heart.df <- cleanMouseHeart()
   exportAsTable(df=heart.df, file=heart.mldata)
-  
-  
+
+
   # exploritory analysis of hearts data
   exploritoryPlots(df=heart.df, cols=getHeartCols(), outdir=heart.plots.dir,msg="Heart Data -> explore")
-  
+
   # run algorithms "trials" number of times -> save result
   heart.ml.df <- accumMlAlgos(df=heart.df,cols=getHeartCols(),
                               trials=30,resultFile=heart.mlresults)
-  
-  
-  
+
+
+
   # plot the results of each ml algo on the test/training divisions
   plotMlresults(df=heart.ml.df, outdir = heart.plots.dir,msg="Heart data -> AW")
-  
+
 }
 
 main.brain <- function(){
@@ -101,17 +113,23 @@ main.brain <- function(){
   brain.plots.dir <- makeDir(getFullPath("plots/brain/"))
   brain.df <- cleanMouseBrain()
   exportAsTable(df=brain.df, file=brain.mldata)
-  
-  
+
+
   # exploritory analysis of hearts data
   exploritoryPlots(df=brain.df, cols=getBrainCols(), outdir=brain.plots.dir,msg="Brain Data -> explore")
-  
+
   # run algorithms "trials" number of times -> save result
+<<<<<<< HEAD
   brain.ml.df <- accumMlAlgos(df=brain.df,cols=getBrainCols(), trials=30,resultFile=brain.mlresults)
   
+=======
+  brain.ml.df <- accumMlAlgos(df=brain.df,cols=getBrainCols(),
+                              trials=30,resultFile=brain.mlresults)
+
+>>>>>>> 247e683bfac25d63bc5cad44e96a8bc93363469a
   # plot the results of each ml algo on the test/training divisions
   plotMlresults(df=brain.ml.df, outdir = brain.plots.dir,msg="Brain data -> AW")
-  
+
 }
 
 main.foreforebrain <- function(){
@@ -122,22 +140,22 @@ main.foreforebrain <- function(){
   forebrain.plots.dir <- makeDir(getFullPath("plots/forebrain/"))
   forebrain.df <- cleanMouseForebrain()
   exportAsTable(df=forebrain.df, file=forebrain.mldata)
-  
+
   # exploritory analysis of hearts data
   exploritoryPlots(df=forebrain.df, cols=getForebrainCols(), outdir=forebrain.plots.dir,msg="Forebrain Data -> explore")
-  
+
   # run algorithms "trials" number of times -> save result
   forebrain.ml.df <- accumMlAlgos(df=forebrain.df,cols=getForebrainCols(),
                                   trials=30,resultFile=forebrain.mlresults)
-  
+
   # plot the results of each ml algo on the test/training divisions
-  plotMlresults(df=forebrain.ml.df, outdir = forebrain.plots.dir,msg="Forebrain data -> AW") 
+  plotMlresults(df=forebrain.ml.df, outdir = forebrain.plots.dir,msg="Forebrain data -> AW")
 }
 
 main <- function(){
   cat("and now for you, Mr.ScareCrow, \n")
   main.brain();
-  
+
   cat("... one brain\n\n...and now for you, Mr. Lion")
   main.heart()
   cat("... one heart! now forebrain...")
@@ -164,7 +182,7 @@ modelGBM <- function(){
     runGbmOnDataSet(df=df.list[[tissue]],cols=cols.list[[tissue]],outdir=dir.list[[tissue]])
   }
   
-  
+
 }
 
 
