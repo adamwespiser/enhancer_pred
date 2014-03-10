@@ -45,7 +45,7 @@ if(length(new.packages)) install.packages(new.packages)
 #load libs
 lapply(list.of.packages, function(lib){
   library(lib, character.only=TRUE)
-  }) 
+  })
 
 calcNumCores <- function(){
   numCores <- detectCores()
@@ -59,8 +59,8 @@ calcNumCores <- function(){
   cat("using", numCores, "cores")
   return(numCores)
 }
+#registerDoParallel(calcNumCores())
 registerDoParallel(10)
-
 
 ## load in other libs
 source(getFullPath("analysis/dataInput.R"))
@@ -93,6 +93,30 @@ main.heart <- function(){
 
 }
 
+main.brain <- function(){
+  # brain
+  brain.data.dir <- makeDir(getFullPath("data/brain/"))
+  brain.mldata <- paste(brain.data.dir,"dataForPred.tab",sep="")
+  brain.mlresults <- paste(brain.data.dir,"mlResults.tab",sep="")
+  brain.plots.dir <- makeDir(getFullPath("plots/brain/"))
+  brain.df <- cleanMouseBrain()
+  exportAsTable(df=brain.df, file=brain.mldata)
+
+
+  # exploritory analysis of hearts data
+  exploritoryPlots(df=brain.df, cols=getBrainCols(), outdir=brain.plots.dir,msg="Brain Data -> explore")
+
+  # run algorithms "trials" number of times -> save result
+  brain.ml.df <- accumMlAlgos(df=brain.df,cols=getBrainCols(), trials=30,resultFile=brain.mlresults)
+
+  brain.ml.df <- accumMlAlgos(df=brain.df,cols=getBrainCols(),
+                              trials=30,resultFile=brain.mlresults)
+
+  # plot the results of each ml algo on the test/training divisions
+  plotMlresults(df=brain.ml.df, outdir = brain.plots.dir,msg="Brain data -> AW")
+
+}
+
 main.foreforebrain <- function(){
   # forebrain
   forebrain.data.dir <- makeDir(getFullPath("data/forebrain/"))
@@ -114,22 +138,22 @@ main.foreforebrain <- function(){
 }
 
 modelGBM <- function(){
-  
+
   df.list <- list("forebrain"=cleanMouseForebrain(),
                   "brain"=cleanMouseBrain(),
                   "heart"=cleanMouseHeart() )
-  
+
   dir.list <- list("forebrain"= makeDir(getFullPath("plots/gbm/forebrain")),
                    "brain"=makeDir(getFullPath("plots/gbm/brain")),
                    "heart"=makeDir(getFullPath("plots/gbm/heart")) )
-  
+
   cols.list <- list("forebrain"=getForebrainCols(),
                     "brain"=getBrainCols(),
-                    "heart"=getHeartCols() ) 
-  
+                    "heart"=getHeartCols() )
+
   for(tissue in c("heart", "forebrain", "brain")){
     runGbmOnDataSet(df=df.list[[tissue]],cols=cols.list[[tissue]],outdir=dir.list[[tissue]])
-  } 
+  }
 }
 
 main <- function(){
@@ -138,6 +162,6 @@ main <- function(){
 
   cat("******************************** running forebrain...\n")
   main.foreforebrain()
-  
+
   cat("******************************** done...\n")
 }
