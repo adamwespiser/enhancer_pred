@@ -40,10 +40,7 @@ library(vcd) # mosaicpl
 library(C50) # kuhn:411
 library(mda) # fda, kuhn:362
 library(gam)
-<<<<<<< HEAD
 library(reshape2) # needed for melt
-registerDoParallel(10)
-=======
 library(reshape2)
 library(MASS)
 
@@ -59,9 +56,8 @@ calcNumCores <- function(){
   cat("using", numCores, "cores")
   return(numCores)
 }
-registerDoParallel(calcNumCores())
->>>>>>> edb1c2a954eaa9c8b3ffcc59a2d1187b78dce6b2
-
+#registerDoParallel(calcNumCores())
+registerDoParallel(10)
 
 ## load in other libs
 source(getFullPath("analysis/dataInput.R"))
@@ -111,8 +107,7 @@ main.brain <- function(){
   exploritoryPlots(df=brain.df, cols=getBrainCols(), outdir=brain.plots.dir,msg="Brain Data -> explore")
   
   # run algorithms "trials" number of times -> save result
-  brain.ml.df <- accumMlAlgos(df=brain.df,cols=getBrainCols(),
-                              trials=30,resultFile=brain.mlresults)
+  brain.ml.df <- accumMlAlgos(df=brain.df,cols=getBrainCols(), trials=30,resultFile=brain.mlresults)
   
   # plot the results of each ml algo on the test/training divisions
   plotMlresults(df=brain.ml.df, outdir = brain.plots.dir,msg="Brain data -> AW")
@@ -148,7 +143,28 @@ main <- function(){
   cat("... one heart! now forebrain...")
   main.foreforebrain()
   cat("...and we are done!")
+}
+
+
+modelGBM <- function(){
   
+  df.list <- list("forebrain"=cleanMouseForebrain(),
+                  "brain"=cleanMouseBrain(),
+                  "heart"=cleanMouseHeart() )
+  
+  dir.list <- list("forebrain"= makeDir(getFullPath("plots/gbm/forebrain")),
+                  "brain"=makeDir(getFullPath("plots/gbm/brain")),
+                  "heart"=makeDir(getFullPath("plots/gbm/heart")) )
+  
+  cols.list <- list("forebrain"=getForebrainCols(),
+                    "brain"=getBrainCols(),
+                    "heart"=getHeartCols() ) 
+  
+  for(tissue in c("heart", "forebrain", "brain")){
+    runGbmOnDataSet(df=df.list[[tissue]],cols=cols.list[[tissue]],outdir=dir.list[[tissue]])
+  }
   
   
 }
+
+

@@ -186,25 +186,25 @@ runMlAlgosListVersion <- function(df,cols){
                     gbm.id1.cv3 = getStatsFromGlmModel(predict(gbm1 <- gbm(formula(form), data = df[trainVec,], distribution="bernoulli", cv.folds=3, 
                                                              n.trees=10000, interaction.depth=1,verbose=FALSE,shrinkage=0.001), 
                                                  df[-trainVec,], 
-                                                 type="response",n.trees=gbm.perf(gbm1,method="cv")),
+                                                 type="response",n.trees=gbm.perf(gbm1,method="cv",plot.it = FALSE)),
                                          y.test),
                     
                     gbm.id2.cv3 = getStatsFromGlmModel(predict(gbm2 <- gbm(formula(form), data = df[trainVec,], distribution="bernoulli", cv.folds=3, 
                                                                            n.trees=10000, interaction.depth=2,verbose=FALSE,shrinkage=0.001), 
                                                                df[-trainVec,], 
-                                                               type="response",n.trees=gbm.perf(gbm2,method="cv")),
+                                                               type="response",n.trees=gbm.perf(gbm2,method="cv",plot.it = FALSE)),
                                                        y.test),
                     
                     gbm.id3.cv3 = getStatsFromGlmModel(predict(gbm3 <- gbm(formula(form), data = df[trainVec,], distribution="bernoulli", cv.folds=3, 
                                                                            n.trees=10000, interaction.depth=3,verbose=FALSE,shrinkage=0.001), 
                                                                df[-trainVec,], 
-                                                               type="response",n.trees=gbm.perf(gbm3,method="cv")),
+                                                               type="response",n.trees=gbm.perf(gbm3,method="cv",plot.it = FALSE)),
                                                        y.test),
                     
                     gbm.id4.cv3 = getStatsFromGlmModel(predict(gbm4 <- gbm(formula(form), data = df[trainVec,], distribution="bernoulli", cv.folds=3, 
                                                                            n.trees=10000, interaction.depth=4,verbose=FALSE,shrinkage=0.001), 
                                                                df[-trainVec,], 
-                                                               type="response",n.trees=gbm.perf(gbm4,method="cv")),
+                                                               type="response",n.trees=gbm.perf(gbm4,method="cv",plot.it = FALSE)),
                                                        y.test),
                     
                     
@@ -335,27 +335,32 @@ getBestGBMparams <- function(df,cols, outdir){
 
 
 runGbmOnDataSet <- function(df,cols,outdir){
+  form <- paste("label ~   ",do.call(paste, c(as.list(cols), sep=" + ")))
+  
   gbm.call <-  quote(gbm(formula(form), data = df, distribution="bernoulli", cv.folds=3, 
-               n.trees=100, interaction.depth=1,verbose=FALSE))
+               n.trees=10000, interaction.depth=4,verbose=FALSE))
   gbm.fn <- eval(gbm.call[[1]],parent.frame())
   gbm.match <-  match.call(gbm.fn,gbm.call)
   gbm.fn.string <- paste("gbm(",do.call(paste,c(as.list(paste0(names(gbm.match),"=",as.character(gbm.match))[-1]),sep=", "  )), ")",sep="")
   
-    
+  gbm.model <- eval(gbm.call)
+  gbm.model.sum <- summary(gbm.model)
+
   ggplot(gbm.model.sum, aes(x=var,y=rel.inf))+geom_histogram(stat="identity") + coord_flip()+
     ggtitle(gbm.fn.string)
   ggsave(paste(outdir,"gbmRelImp.pdf",sep="/"))
   
   pdf(paste(outdir,"gbmError.pdf",sep="/"),width=7,height=7)
-  gbm.perf(gbm1)
+  gbm.perf(gbm.model)
   dev.off()
   
-  write(gbm.fn.string,file=paste(outdir,"gbmCall-Short.pdf",sep="/"))
+  write(gbm.fn.string,file=paste(outdir,"gbmCall-Short.txt",sep="/"))
   
   
   fullCallFile <- file( paste(outdir,"gbmCall-fullSpecify.txt",sep="/"))
   saveFunArgs(fnCall = gbm.match,verbose=FALSE,    file =paste(outdir,"gbmCall-fullSpecify.txt",sep="/"))
   removeMaxFiles(paste(outdir,"gbmCall-fullSpecify.txt",sep="/"))
+  close(fullCallFile)
   
 }
 
