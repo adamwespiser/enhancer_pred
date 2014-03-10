@@ -44,12 +44,8 @@ library(C50) # kuhn:411
 library(mda) # fda, kuhn:362
 library(gam)
 library(reshape2) # needed for melt
-<<<<<<< HEAD
 library(reshape2)
-library(MASS)
-=======
 library(MASS) # needed for lda
->>>>>>> 247e683bfac25d63bc5cad44e96a8bc93363469a
 
 calcNumCores <- function(){
   numCores <- detectCores()
@@ -63,13 +59,10 @@ calcNumCores <- function(){
   cat("using", numCores, "cores")
   return(numCores)
 }
-<<<<<<< HEAD
 #registerDoParallel(calcNumCores())
 registerDoParallel(10)
-=======
 registerDoMC(calcNumCores())
 
->>>>>>> 247e683bfac25d63bc5cad44e96a8bc93363469a
 
 ## load in other libs
 source(getFullPath("analysis/dataInput.R"))
@@ -119,14 +112,11 @@ main.brain <- function(){
   exploritoryPlots(df=brain.df, cols=getBrainCols(), outdir=brain.plots.dir,msg="Brain Data -> explore")
 
   # run algorithms "trials" number of times -> save result
-<<<<<<< HEAD
   brain.ml.df <- accumMlAlgos(df=brain.df,cols=getBrainCols(), trials=30,resultFile=brain.mlresults)
   
-=======
   brain.ml.df <- accumMlAlgos(df=brain.df,cols=getBrainCols(),
                               trials=30,resultFile=brain.mlresults)
 
->>>>>>> 247e683bfac25d63bc5cad44e96a8bc93363469a
   # plot the results of each ml algo on the test/training divisions
   plotMlresults(df=brain.ml.df, outdir = brain.plots.dir,msg="Brain data -> AW")
 
