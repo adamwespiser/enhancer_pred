@@ -1,7 +1,4 @@
-
-
-
-plotMlresults <- function(df, outdir,msg=""){
+plotMlresults <- function(df, outdir, msg=""){
   
   ggplot(df,  aes(algo,AUC))+geom_boxplot() + 
      coord_flip() + theme_bw()+ xlab("learning algorithm") + ylab("AUC")+

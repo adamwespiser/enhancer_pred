@@ -17,24 +17,24 @@ calcAUC <- function(prob, label){
   }
 }
 
-getStatsFromGlmModel <- function(probs, y,knn=FALSE){
-  if (TRUE == knn){ 
-    pred <- as.numeric(probs) - 1 
+getStatsFromGlmModel <- function(probs, y, knn=FALSE){
+  if (TRUE == knn){
+    pred <- as.numeric(probs) - 1
   } else {
     pred <- rep(0,length(probs))
     pred[which(probs > 0.5)] <- 1
   }
-  
+
   correct <- (pred == y)
   poly2 <- data.frame(trial=-1)
   poly2$TP <- length(which(correct & y ==1))
-  poly2$TN <- length(which(correct & y ==0))  
-  poly2$FP <- length(which(!correct & y ==0))  
-  poly2$FN <- length(which(!correct & y ==1))  
+  poly2$TN <- length(which(correct & y ==0))
+  poly2$FP <- length(which(!correct & y ==0))
+  poly2$FN <- length(which(!correct & y ==1))
   poly2$prec <- with(poly2, TP / (TP + FP))
   poly2$sens <- with(poly2, TP / (TP + FN))
   poly2$errorRate <-  1 - sum(correct)/length(correct)
-  if (TRUE == knn){ 
+  if (TRUE == knn){
     poly2$AUC <- 0
   } else {
     poly2$AUC <- calcAUC(prob=probs, label=y)
@@ -52,7 +52,7 @@ makeDir <- function(dir,recursiveCreate=TRUE){
 
 getMemory <- function(){
   gettextf("%.2f Mb stored in memory",
-           sum(sapply(unlist(ls(envir=.GlobalEnv)), 
+           sum(sapply(unlist(ls(envir=.GlobalEnv)),
                       function(x)object.size(get(x,envir=.GlobalEnv))))
            / (1000000))
 }
@@ -60,43 +60,43 @@ getMemory <- function(){
 
 saveFunArgs <- function(fnCall,verbose=TRUE,env=parent.frame(),
                         file="~/sandbox/objects.R",append=FALSE){
-  
+
   fnCall <- standardise_call(fnCall)
   stopifnot(is.call(fnCall))
-  
+
   if(identical(append,TRUE)){
   append.file <- file(file, open="a")
   } else {
     append.file <- file(file, open="w")
-    
-    
+
+
   }
   values <- as.character(fnCall[-1])
   variables <- names(fnCall)[-1]
   call.list <- as.list(fnCall)[-1]
-  
+
   if(verbose){
     print(fnCall)
     print(paste0(variables, " = ", values, " #", sapply(fnCall[-1], typeof)))
   }
-  
+
   dput(date(), file = append.file)
   dput(fnCall, file = append.file)
-  
+
   for(i in which(variables != "")){
    # val.local <- ifelse(is.language(call.list[i][[1]]),eval(parse(text=values[i]), env),               call.list[i][[1]])
-    
+
     if(is.language(call.list[i][[1]])){val.local <- eval(parse(text=values[i]), env)}else{val.local <-   call.list[i][[1]]}
-    
+
     assign(variables[i], val.local, env)
     var.char <- variables[i]
     cat(paste(var.char, " = "),file=append.file)
     dput(eval(as.name(var.char),env), file=append.file)
   }
-  
+
   cat(paste(fnCall[[1]],"(",paste0(variables, collapse=","), ")",sep=""),file=append.file)
   cat("\n\n\n", file=append.file)
-  
+
 }
 
 testSaveFunArgs <- function(){
@@ -128,18 +128,18 @@ saveFunArgs(fnCall=callExpr,verbose=FALSE,
 evalFunArgs <- function(fnCall,verbose=TRUE,env=parent.frame()){
   fnCall <- standardise_call(fnCall)
   stopifnot(is.call(fnCall))
-  
+
   values <- as.character(fnCall[-1])
   variables <- names(fnCall)[-1]
   call.list <- as.list(fnCall)[-1]
-  
+
   if(verbose){
     print(fnCall)
     print(paste0(variables, " = ", values, " #", sapply(fnCall[-1], typeof)))
   }
   for(i in which(variables != "")){
     val.local <- ifelse(is.language(call.list[i][[1]]),
-                        eval(parse(text=values[i]), env), 
+                        eval(parse(text=values[i]), env),
                         call.list[i][[1]])
     assign(variables[i], val.local, env)
   }
