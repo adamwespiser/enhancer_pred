@@ -28,8 +28,11 @@ getHeartCols <- function(){
   df.names.heart <- c("chr","start","end", "name", "label", "original_species", "tissue_possitive", "P300_vs_input",
                       "H3K27ac_vs_input", "H3k04me1_vs_input","H3k04me3_vs_input","H3k09ac","H3k27ac","H3k27ac_vs_input",
                       "H3k27me3","H3k36me3","H3k4me1","H3k4me3","H3k79me2","P300_vs_input2","pol2_vs_input","dgfNarrowPeak")
-  df.names.heart[8:22]
-  
+  cols <- df.names.heart[8:22]
+  if(!identical(unique(length(cols)), length(cols))){
+    stop("there are duplicate column names -> aborting")
+  }
+  cols
 }
 
 
@@ -43,7 +46,11 @@ getBrainCols <- function(){
                        "H3k4me1_vInpt_cortex", "H3k4me3_vInpt_cortex", "H3k04me1_vInpt_wbrain", 
                        "H3k04me3_vInpt_wbrain", "H3k09me3_vInpt_wbrain",  "H3k27ac_vInpt_wbrain", 
                        "H3k27me3_vInpt_wbrain",  "H3k36me3_vInpt_wbrain", "Pol2_vInpt_wbrain")
-  df.names.brain[8:25]
+  cols <- df.names.brain[8:25]
+  if(!identical(unique(length(cols)), length(cols))){
+    stop("there are duplicate column names -> aborting")
+  }
+  cols
   
 }
 
@@ -116,7 +123,11 @@ cleanColsHumanBrain <- function(cols){
 
 getBrainColsHuman <- function(human.file=human.brain.table){
   brain.df <- read.csv(human.file,sep="\t")
-  cleanColsHumanBrain(colnames(brain.df))[8:72]
+  cols <- cleanColsHumanBrain(colnames(brain.df))[8:72]
+  if(!identical(unique(length(cols)), length(cols))){
+    stop("there are duplicate column names -> aborting")
+  }
+  cols
 }
 
 cleanHumanBrain <- function(human.file=human.brain.table){
@@ -138,7 +149,11 @@ cleanColsHumanHeart <- function(cols){
 
 getHeartColsHuman <- function(human.file=human.heart.table){
   heart.df <- read.csv(human.file,sep="\t")
-  cleanColsHumanHeart(colnames(heart.df))[8:38]
+  cols <- cleanColsHumanHeart(colnames(heart.df))[8:38]
+  if(!identical(unique(length(cols)), length(cols))){
+    stop("there are duplicate column names -> aborting")
+  }
+  cols
 }
 
 cleanHumanHeart <- function(human.file=human.heart.table){
