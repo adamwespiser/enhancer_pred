@@ -32,13 +32,16 @@ list.of.packages <- c(
     "C50", # kuhn:411
     "mda", # fda, kuhn:362
     "gam",
-    "gbm",
     "reshape2", # needed for melt
     "MASS",
     "devtools" # for github installs
     )
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
+
+if (!gbm %in% installed.packages()) {
+  install_url("http://cran.r-project.org/src/contrib/Archive/gbm/gbm_2.0-8.tar.gz")
+}
 
 #install_github("harrysouthworth/gbm")
 
