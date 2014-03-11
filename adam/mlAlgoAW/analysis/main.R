@@ -183,9 +183,9 @@ modelGBM <- function(){
                   "brain"=cleanMouseBrain(),
                   "heart"=cleanMouseHeart() )
 
-  dir.list <- list("forebrain"= makeDir(getFullPlotPath("gbm/mouse/forebrain")),
-                   "brain"=makeDir(getFullPlotPath("gbm/mouse/brain")),
-                   "heart"=makeDir(getFullPlotPath("gbm/mouse/heart")) )
+  dir.list <- list("forebrain"= makeDir(getFullPlotPath("gbm/mouse/forebrain"/)),
+                   "brain"=makeDir(getFullPlotPath("gbm/mouse/brain/")),
+                   "heart"=makeDir(getFullPlotPath("gbm/mouse/heart/")) )
 
   cols.list <- list("forebrain"=getForebrainCols(),
                     "brain"=getBrainCols(),
@@ -207,8 +207,8 @@ modelGBM.human <- function(){
   df.list <- list("brain"=cleanHumanBrain(),
                   "heart"=cleanHumanHeart() )
   
-  dir.list <- list("brain"=makeDir(getFullPlotPath("gbm/human/brain")),
-                   "heart"=makeDir(getFullPlotPath("gbm/human/heart")) )
+  dir.list <- list("brain"=makeDir(getFullPlotPath("gbm/human/brain/")),
+                   "heart"=makeDir(getFullPlotPath("gbm/human/heart/")) )
   
   cols.list <- list("brain"=getBrainColsHuman(),
                     "heart"=getHeartColsHuman() )
