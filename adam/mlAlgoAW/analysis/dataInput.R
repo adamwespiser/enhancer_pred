@@ -3,6 +3,11 @@ dataFolder <- file.path(homeFolder, "Dropbox", "enhancer_predictions")
 mouse.heart.table <<- file.path(dataFolder, "mouse_heart_master_table_raw_scores.tab")
 mouse.brain.table <<- file.path(dataFolder, "mouse_brain_master_table_raw_scores.tab")
 mouse.forebrain.table <<- file.path(dataFolder, "mouse_brain_master_table_raw_scores.forebrain_positive_and_negative.txt")
+human.brain.table <<- file.path(dataFolder, "human_brain_master_table_raw_scores.tab")
+human.heart.table <<- file.path(dataFolder, "human_heart_master_table_raw_scores.tab")
+
+
+
 
 cleanMouseHeart <- function(mouse.file=mouse.heart.table){
   heart.df <- read.csv(mouse.file,sep="\t")
@@ -101,3 +106,49 @@ cleanMouseForebrain <- function(mouse.file=mouse.forebrain.table){
 }
 
 
+# TODO, use reduce or for loop to write R version of lisp's 'dotimes' function...
+
+cleanColsHumanBrain <- function(cols){
+  
+  as.character(unlist(applyGsubVec(applyGsubVec(applyGsubVec(applyGsubVec(cols,
+  "human_brain_intersect_E0",""),".with_scores.bed.scores_only",""),"[6-9][0-9].",""),"\\.","_")))
+}
+
+getBrainColsHuman <- function(human.file=human.brain.table){
+  brain.df <- read.csv(human.file,sep="\t")
+  cleanColsHumanBrain(colnames(brain.df))[8:72]
+}
+
+cleanHumanBrain <- function(human.file=human.brain.table){
+  
+  brain.df <- read.csv(human.file,sep="\t")
+  origCols <- names(brain.df)
+  names(brain.df) <- cleanColsHumanBrain(origCols)
+  
+  #negative is 0brain.df
+  #positive is 1
+  brain.df$label <- as.numeric(brain.df$label) -1
+  brain.df
+}
+
+cleanColsHumanHeart <- function(cols){  
+  as.character(unlist(applyGsubVec(applyGsubVec(applyGsubVec(cols,
+       "human_heart_intersect_E[0-1][0-9][0-9]\\.",""),"\\.with_scores.bed.scores_only",""),"\\.","_")))
+}
+
+getHeartColsHuman <- function(human.file=human.heart.table){
+  heart.df <- read.csv(human.file,sep="\t")
+  cleanColsHumanHeart(colnames(heart.df))[8:38]
+}
+
+cleanHumanHeart <- function(human.file=human.heart.table){
+  
+  heart.df <- read.csv(human.file,sep="\t")
+  origCols <- names(heart.df)
+  names(heart.df) <- cleanColsHumanHeart(origCols)
+  
+  #negative is 0heart.df
+  #positive is 1
+  heart.df$label <- as.numeric(heart.df$label) -1
+  heart.df
+}

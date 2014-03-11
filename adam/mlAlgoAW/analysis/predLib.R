@@ -173,8 +173,20 @@ modify_call <- function(call, new_args) {
 
 
 removeMaxFiles <- function(checkFile){
-  mb.size <-  (file.info(checkFile)$size)/(1000 * 1000)
-  if (mb.size > 450){
-    file.remove(checkFile)
-  }
+  # TODO figure out what is going on here...
+  
+  #mb.size <-  (file.info(checkFile)$size)/(1000 * 1000)
+  #if (mb.size > 450){
+  #  file.remove(checkFile)
+  #}
 }
+
+
+applyGsubVec <- function(x,pattern,replacement){
+  sapply(x,function(y)gsub(x=y, pattern=pattern, replacement=replacement))
+  
+}
+
+
+
+

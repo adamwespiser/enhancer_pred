@@ -77,7 +77,7 @@ main.heart <- function(){
   heart.data.dir <- makeDir(getFullPath("data/heart/"))
   heart.mldata <- paste(heart.data.dir,"dataForPred.tab",sep="")
   heart.mlresults <- paste(heart.data.dir,"mlResults.tab",sep="")
-  heart.plots.dir <- makeDir(getFullPlotPath("heart/"))
+  heart.plots.dir <- makeDir(getFullPlotPath("algoCompare/mouse/heart/"))
   heart.df <- cleanMouseHeart()
   exportAsTable(df=heart.df, file=heart.mldata)
 
@@ -98,7 +98,7 @@ main.brain <- function(){
   brain.data.dir <- makeDir(getFullPath("data/brain/"))
   brain.mldata <- paste(brain.data.dir,"dataForPred.tab",sep="")
   brain.mlresults <- paste(brain.data.dir,"mlResults.tab",sep="")
-  brain.plots.dir <- makeDir(getFullPath("plots/brain/"))
+  brain.plots.dir <- makeDir(getFullPlotPath("algoCompare/mouse/brain/"))
   brain.df <- cleanMouseBrain()
   exportAsTable(df=brain.df, file=brain.mldata)
 
@@ -117,12 +117,12 @@ main.brain <- function(){
 
 }
 
-main.foreforebrain <- function(){
+main.forebrain <- function(){
   # forebrain
   forebrain.data.dir <- makeDir(getFullPath("data/forebrain/"))
   forebrain.mldata <- paste(forebrain.data.dir,"dataForPred.tab",sep="")
   forebrain.mlresults <- paste(forebrain.data.dir,"mlResults.tab",sep="")
-  forebrain.plots.dir <- makeDir(getFullPlotPath("forebrain/"))
+  forebrain.plots.dir <- makeDir(getFullPlotPath("algoCompare/mouse/forebrain/"))
   forebrain.df <- cleanMouseForebrain()
   exportAsTable(df=forebrain.df, file=forebrain.mldata)
 
@@ -137,15 +137,55 @@ main.foreforebrain <- function(){
   plotMlresults(df=forebrain.ml.df, outdir = forebrain.plots.dir,msg="Forebrain data -> AW")
 }
 
+main.humanBrain <- function(){
+  # forebrain
+  brain.human.data.dir <- makeDir(getFullPath("data/human/brain/"))
+  brain.human.mldata <- paste(brain.human.data.dir,"dataForPred.tab",sep="")
+  brain.human.mlresults <- paste(brain.human.data.dir,"mlResults.tab",sep="")
+  brain.human.plots.dir <- makeDir(getFullPlotPath("algoCompare/human/brain/"))
+  brain.human.df <- cleanHumanBrain()
+  exportAsTable(df=brain.human.df, file=brain.human.mldata)
+  
+  # run algorithms "trials" number of times -> save result
+  human.brain.ml.df <- accumMlAlgos(df=brain.human.df,cols=getBrainColsHuman(),
+                                  trials=30,resultFile=brain.human.mlresults)
+  
+  # exploritory analysis of hearts data
+  exploritoryPlots(df=brain.human.df, cols=getBrainColsHuman(), outdir=brain.human.plots.dir,msg="Forebrain Data -> explore")
+  
+  # plot the results of each ml algo on the test/training divisions
+  plotMlresults(df=human.brain.ml.df, outdir = brain.human.plots.dir,msg="Forebrain Human data -> AW")
+}
+main.humanHeart <- function(){
+  # heart in human
+  heart.human.data.dir <- makeDir(getFullPath("data/human/heart/"))
+  heart.human.mldata <- paste(heart.human.data.dir,"dataForPred.tab",sep="")
+  heart.human.mlresults <- paste(heart.human.data.dir,"mlResults.tab",sep="")
+  heart.human.plots.dir <- makeDir(getFullPlotPath("algoCompare/human/heart/"))
+  heart.human.df <- cleanHumanHeart()
+  exportAsTable(df=heart.human.df, file=heart.human.mldata)
+  
+  # run algorithms "trials" number of times -> save result
+  human.heart.ml.df <- accumMlAlgos(df=heart.human.df,cols=getHeartColsHuman(),
+                                    trials=30,resultFile=heart.human.mlresults)
+  
+  # exploritory analysis of hearts data
+  exploritoryPlots(df=heart.human.df, cols=getHeartColsHuman(), outdir=heart.human.plots.dir,msg="Foreheart Data -> explore")
+  
+  # plot the results of each ml algo on the test/training divisions
+  plotMlresults(df=human.heart.ml.df, outdir = heart.human.plots.dir,msg="Foreheart Human data -> AW")
+}
+
+#main.humanHeart();main.humanBrain()
 modelGBM <- function(){
 
   df.list <- list("forebrain"=cleanMouseForebrain(),
                   "brain"=cleanMouseBrain(),
                   "heart"=cleanMouseHeart() )
 
-  dir.list <- list("forebrain"= makeDir(getFullPath("plots/gbm/forebrain")),
-                   "brain"=makeDir(getFullPath("plots/gbm/brain")),
-                   "heart"=makeDir(getFullPath("plots/gbm/heart")) )
+  dir.list <- list("forebrain"= makeDir(getFullPlotPath("gbm/mouse/forebrain")),
+                   "brain"=makeDir(getFullPlotPath("gbm/mouse/brain")),
+                   "heart"=makeDir(getFullPlotPath("gbm/mouse/heart")) )
 
   cols.list <- list("forebrain"=getForebrainCols(),
                     "brain"=getBrainCols(),
@@ -153,15 +193,69 @@ modelGBM <- function(){
 
   for(tissue in c("heart", "forebrain", "brain")){
     runGbmOnDataSet(df=df.list[[tissue]],cols=cols.list[[tissue]],outdir=dir.list[[tissue]])
+    runGbmTopFive(df=df.list[[tissue]],cols=cols.list[[tissue]],outdir=dir.list[[tissue]])
+    gbmResults.df <- accumMlAlgosGbmTop5(df=df.list[[tissue]],cols=cols.list[[tissue]],
+                                         trials=30,resultFile=paste(dir.list[[tissue]],"/gbmTop5compare.tab",sep=""),seed=412)
+    plotMlresults(df=gbmResults.df, outdir = dir.list[[tissue]],msg=paste("Tissue =", tissue,"\ngbm top 5 vs. normal compare"))
+    
   }
 }
+
+
+modelGBM.human <- function(){
+  
+  df.list <- list("brain"=cleanHumanBrain(),
+                  "heart"=cleanHumanHeart() )
+  
+  dir.list <- list("brain"=makeDir(getFullPlotPath("gbm/human/brain")),
+                   "heart"=makeDir(getFullPlotPath("gbm/human/heart")) )
+  
+  cols.list <- list("brain"=getBrainColsHuman(),
+                    "heart"=getHeartColsHuman() )
+  
+  for(tissue in c("heart","brain")){
+    runGbmOnDataSet(df=df.list[[tissue]],cols=cols.list[[tissue]],outdir=dir.list[[tissue]])
+    runGbmTopFive(df=df.list[[tissue]],cols=cols.list[[tissue]],outdir=dir.list[[tissue]])
+    gbmResults.df <- accumMlAlgosGbmTop5(df=df.list[[tissue]],cols=cols.list[[tissue]],
+                                         trials=30,resultFile=paste(dir.list[[tissue]],"/gbmTop5compare.tab",sep=""),seed=412)
+    plotMlresults(df=gbmResults.df, outdir = dir.list[[tissue]],msg=paste("Tissue =", tissue,"\ngbm top 4 vs. normal compare"))  }
+}
+
+main.modelGbmHumanMouse <- function(){
+  cat("******************************** modelling gbm in human....\n")
+  modelGBM.human()
+  cat("done")
+  cat("******************************** modeling gbm in mouse...\n")
+  modelGBM()
+  cat("done")
+}
+
 
 main <- function(){
   cat("******************************** running heart...\n")
   main.heart()
 
   cat("******************************** running forebrain...\n")
-  main.foreforebrain()
+  main.forebrain()
 
+  cat("******************************** assessing GBM model on entire dataset...\n")
+  
+  modelGBM()
   cat("******************************** done...\n")
 }
+
+runHuman <- function(){
+  cat("******************************** beating human heart...\n")
+  #main.humanHeart();
+  cat("******************************** thinking brain...\n")
+  main.humanBrain()
+  cat("******************************** assessing GBM model on entire dataset...\n")
+  
+  modelGBM()
+  cat("******************************** done...\n")
+  
+}
+
+
+
+

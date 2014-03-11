@@ -215,7 +215,22 @@ run.gbm.boost.depth4 <- function(form, trainData, testData,  y.test){
       n.trees = 1000),
     y.test))
 }
-
+run.gbm.boost.depth <- function(form, trainData, testData,  y.test,trees=1000,cv=7,depth=4){
+  cat("running run.gbm.boost.depth4\n")
+  return (getStatsFromGlmModel(
+    predict(
+      gbm(formula(form), 
+          data = trainData, 
+          distribution="bernoulli", 
+          cv.folds=cv,
+          n.trees=trees, 
+          interaction.depth=depth,
+          verbose=FALSE), 
+      testData, 
+      type="response", 
+      n.trees = trees),
+    y.test))
+}
 run.gbm.id1.cv3 <- function(form, trainData, testData,  y.test){
   cat("running run.gbm.id1.cv3\n")
   return(getStatsFromGlmModel(
@@ -284,7 +299,67 @@ run.gbm.id4.cv3 <- function(form, trainData, testData,  y.test){
     y.test))
 }
 
-run.C5.0.boost <- function(form.bost, trainData, testData,  y.test){
+run.gbm.id.cv <- function(form, trainData, testData,  y.test,id=1,cv=3,shrinkage=0.001,trees=10000){
+  cat("running run.gbm.id.cv\n")
+  return(getStatsFromGlmModel(
+    predict(gbm4 <- gbm(formula(form),
+                        data = trainData,
+                        distribution="bernoulli",
+                        cv.folds=3,
+                        n.trees=trees,
+                        interaction.depth=id,
+                        verbose=FALSE,
+                        shrinkage=shrinkage),
+            testData,
+            type="response",
+            n.trees=gbm.perf(gbm4,method="cv",plot.it = FALSE)),
+    y.test))
+}
+
+
+
+gbm.id.cv.getTop5pred <- function(form, trainData, cols,id=1,cv=3,shrinkage=0.001,trees=10000){
+  cat("running run.gbm.id.cv\n")
+  gbm4 <- gbm(formula(form),
+                        data = trainData,
+                        distribution="bernoulli",
+                        cv.folds=3,
+                        n.trees=trees,
+                        interaction.depth=id,
+                        verbose=FALSE,
+                        shrinkage=shrinkage)
+  gbm.sum <- summary(gbm4,plotit=FALSE)
+  gbm.colRank <- as.numeric(unlist(sapply(cols, function(x)which( as.character((gbm.sum)$var) == x))))
+  
+  formTop5 <- paste("label ~   ",do.call(paste, c(as.list(cols[gbm.colRank <= 5]), sep=" + ")))
+  
+  form
+  
+}
+
+run.gbm.id.cv.top5 <- function(form, trainData, testData,  y.test, cols, id=1, cv=3, shrinkage=0.001,trees=10000,printMsg=FALSE){
+  if (printMsg){
+  cat("running run.gbm.id.cv top 4 prediction\n")
+  }
+  formTop5 <- gbm.id.cv.getTop5pred(form, trainData= trainData, cols,id=id ,cv=3, shrinkage=shrinkage,trees=trees)
+  
+  return(getStatsFromGlmModel(
+    predict(gbm4 <- gbm(formula(formTop5),
+                        data = trainData,
+                        distribution="bernoulli",
+                        cv.folds=3,
+                        n.trees=trees,
+                        interaction.depth=id,
+                        verbose=FALSE,
+                        shrinkage=shrinkage),
+            testData,
+            type="response",
+            n.trees=gbm.perf(gbm4,method="cv",plot.it = FALSE)),
+    y.test))
+}
+
+
+run.C5.0.boost <- function(form.boost, trainData, testData,  y.test){
   cat("running run.C5.0.boost\n")
   return(getStatsFromGlmModel(
     predict(
@@ -342,8 +417,11 @@ runMlAlgosListVersion <- function(df,cols){
   testData <- df[-trainVec,]
   
   algo.list <- list(
-    glm.cross.weights.stats = run.glm.cross.weights(form.cross, trainData, testData, weight.trainVec, y.test),
-    glm.cross.stats = run.glm.cross(form.cross, trainData, testData, y.test),
+    ############################################## 
+    #Adam -> removing glm cross for brain -> since these scale O(n^2) to the number of input cols in brain...
+    ###############################################
+    #glm.cross.weights.stats = run.glm.cross.weights(form.cross, trainData, testData, weight.trainVec, y.test),
+    #glm.cross.stats = run.glm.cross(form.cross, trainData, testData, y.test),
     lda.stats = run.lda(trainVec.X, y.trainVec, test.X, y.test),
     qda.stats = run.qda(trainVec.X, y.trainVec, test.X, y.test),
     ridge.weight.stats = run.ridge.weight(trainVec.X, y.trainVec, grid, weight.trainVec, scaleDistro, test.X, y.test),
@@ -355,13 +433,13 @@ runMlAlgosListVersion <- function(df,cols){
     gam = run.gam(form, trainData, testData, y.test),
     glm.boost = run.glm.boost(form.boost, trainData, testData, y.test),
     gam.boost = run.gam.boost(form.boost, trainData, testData, y.test),
-    gbm.boost.depth2 = run.gbm.boost.depth2(form, trainData, testData, y.test),
-    gbm.boost.depth4 = run.gbm.boost.depth4(form, trainData, testData, y.test),
-    gbm.id1.cv3 = run.gbm.id1.cv3(form, trainData, testData, y.test),
-    gbm.id2.cv3 = run.gbm.id2.cv3(form, trainData, testData, y.test),
-    gbm.id3.cv3 = run.gbm.id3.cv3(form, trainData, testData, y.test),
-    gbm.id4.cv3 = run.gbm.id4.cv3(form, trainData, testData, y.test),
-    C5.0.boost = run.C5.0.boost(form.bost, trainData, testData, y.test),
+    gbm.boost.depth2 = run.gbm.boost.depth(form, trainData, testData, y.test,depth=2),
+    gbm.boost.depth4 = run.gbm.boost.depth(form, trainData, testData, y.test,depth=4),
+    gbm.id1.cv3 = run.gbm.id.cv(form, trainData, testData, y.test,id=1,shrinkage=0.01,trees=1000),
+    gbm.id2.cv3 = run.gbm.id.cv(form, trainData, testData, y.test,id=2,shrinkage=0.01,trees=1000),
+    gbm.id3.cv3 = run.gbm.id.cv(form, trainData, testData, y.test,id=3,shrinkage=0.01,trees=1000),
+    gbm.id4.cv3 = run.gbm.id.cv(form, trainData, testData, y.test,id=4,shrinkage=0.01,trees=1000),
+    C5.0.boost = run.C5.0.boost(form.boost, trainData, testData, y.test),
     flex.disc.anyl = run.flex.disc.anyl(form, trainData, testData, y.test)
   ) # END for algo.list
   
@@ -374,7 +452,77 @@ runMlAlgosListVersion <- function(df,cols){
 }
 
 
+runMlAlgos.gbmTop5Compare <- function(df,cols,trial=-1){
+  #   cols <- names(df)[8:22]
+  trainVec <- sample(seq_along(df$label), 0.7*dim(df)[1])
+  trainVecForGlm <- trainVec
+  trainVec.X <- as.matrix(df[trainVec,cols])
+  test.X <- as.matrix(df[-trainVec,cols])
+  y.trainVec <- df$label[trainVec]
+  y.test <- df$label[-trainVec]
+  y.freq0 <- length(which(y.trainVec == 0))/length(y.trainVec)
+  y.freq1 <- length(which(y.trainVec == 1))/length(y.trainVec)
+  weight.trainVec <<- ifelse(y.trainVec== 1, 1/y.freq1, 1/y.freq0)
+  grid = 10 ^ seq(10, -2, length = 100)
+  scaleDistro <- TRUE
+  
+  form <- paste("label ~   ",do.call(paste, c(as.list(cols), sep=" + ")))
+  #hierarchical model -> params fitted seperately for each species
+  form.species <-  paste("label ~  original_species/( ",do.call(paste, c(as.list(cols), sep=" + ")),")")
+   
+  form.cross <- paste("label ~", do.call(paste, c(as.list(do.call(paste, c(expand.grid(cols, cols), sep=":"))), sep=" + ")))
+  
+  form.boost <- paste("label_factor ~   ",do.call(paste, c(as.list(cols), sep=" + ")))
+  # form.boost <- paste("label_factor ~   original_species/(", do.call(paste, c(as.list(cols), sep=" + ")),")")
+  
+  df$label_factor <- factor(df$label)
+  
+  # use this formula
+  
+  trainData <- df[trainVec,]
+  testData <- df[-trainVec,]
+  
+  algo.list <- list(
+    ############################################## 
+    #Adam -> removing glm cross for brain -> since these scale O(n^2) to the number of input cols in brain...
+    ###############################################
+    #glm.cross.weights.stats = run.glm.cross.weights(form.cross, trainData, testData, weight.trainVec, y.test),
+    #glm.cross.stats = run.glm.cross(form.cross, trainData, testData, y.test),
 
+    gbm.id1.cv3 = run.gbm.id.cv(form, trainData, testData, y.test,id=1,shrinkage=0.01,trees=1000),
+    gbm.id2.cv3 = run.gbm.id.cv(form, trainData, testData, y.test,id=2,shrinkage=0.01,trees=1000),
+    gbm.id3.cv3 = run.gbm.id.cv(form, trainData, testData, y.test,id=3,shrinkage=0.01,trees=1000),
+    gbm.id4.cv3 = run.gbm.id.cv(form, trainData, testData, y.test,id=4,shrinkage=0.01,trees=1000),
+    gbm.id1.cv3.top5 = run.gbm.id.cv.top5(form, trainData, testData, y.test, cols, id=1,shrinkage=0.01,trees=1000),
+    gbm.id2.cv3.top5 = run.gbm.id.cv.top5(form, trainData, testData, y.test, cols, id=2,shrinkage=0.01,trees=1000),
+    gbm.id3.cv3.top5 = run.gbm.id.cv.top5(form, trainData, testData, y.test, cols, id=3,shrinkage=0.01,trees=1000),
+    gbm.id4.cv3.top5 = run.gbm.id.cv.top5(form, trainData, testData, y.test, cols, id=4,shrinkage=0.01,trees=1000)
+  ) # END for algo.list
+  
+  
+  #df.out    <- rbind(glm.main.stats, glm.cross.weights.stats,glm.cross.stats,lda.stats,qda.stats,ridge.weight.stats,ridge.stats,lasso.weight.stats,lasso.stats,glm.boost,gam.boost)
+  #df.out$algo <- c("glm.main.stats","glm.cross.weights.stats" , "glm.cross.stats" ,"lda","qda","ridge.weight.stats","ridge.stats","lasso.weight.stats","lasso.stats","glm.boost","gam.boost")
+  df.out <- do.call(rbind,lapply(names(algo.list), function(x){algo.list[[x]]$algo <- x; algo.list[[x]]} ))
+  df.out$trial = trial
+  df.out
+}
+accumMlAlgosGbmTop5 <- function(df,cols,trials,resultFile,seed=412){
+  if (missing(trials)){
+    trials <- 30
+  }
+  
+  # set the random seed -> make sure training set consistent between runs...
+  set.seed(seed)
+   
+    collect.df <- do.call(rbind,foreach(i = 1:trials) %dopar% {
+ 
+        runMlAlgos.gbmTop5Compare(df,cols,trial=i)})
+  #
+  if(!missing(resultFile)){
+    exportAsTable(collect.df, resultFile)
+  }
+  collect.df
+}
 accumMlAlgos <- function(df,cols,trials,resultFile,seed=412){
   if (missing(trials)){
     trials <- 30
@@ -385,8 +533,8 @@ accumMlAlgos <- function(df,cols,trials,resultFile,seed=412){
   
   ########################################## START DELETE ME ###############
   #TODO: delete me
-  runMlAlgosListVersion(df,cols)
-  stop("aborting before trials; remove me (purcaro)")
+  #runMlAlgosListVersion(df,cols)
+  #stop("aborting before trials; remove me (purcaro)")
   ########################################## END DELETE ME ###############
   
   collect.df <- do.call(rbind,foreach(i = 1:trials) %dopar% {
@@ -431,12 +579,21 @@ getBestGBMparams <- function(df,cols, outdir){
   
   
   gbm1 <-  gbm(formula(form), data = df[trainVec,], distribution="bernoulli", cv.folds=3,
-               n.trees=10000, interaction.depth=1,verbose=FALSE)
+               n.trees=10000, interaction.depth=1,verbose=TRUE)
   
   model1.stats <- getStatsFromGlmModel(predict(gbm1,
                                                df[-trainVec,],
                                                type="response",n.trees=gbm.perf(gbm1,method="cv")),
                                        y.test)
+  
+  gbm11 <-  gbm(formula(form), data = df[trainVec,], distribution="bernoulli", cv.folds=3,
+               n.trees=1000, interaction.depth=1,verbose=TRUE, shrinkage = 0.01)
+  
+  model11.stats <- getStatsFromGlmModel(predict(gbm11,
+                                               df[-trainVec,],
+                                               type="response",n.trees=gbm.perf(gbm11,method="cv")),
+                                       y.test)
+  
   
   gbm1.sum <- summary(gbm1)
   gbm1.colRank <- as.numeric(unlist(sapply(cols, function(x)which( as.character((gbm1.sum)$var) == x))))
@@ -488,7 +645,7 @@ runGbmOnDataSet <- function(df,cols,outdir){
   form <- paste("label ~   ",do.call(paste, c(as.list(cols), sep=" + ")))
   
   gbm.call <-  quote(gbm(formula(form), data = df, distribution="bernoulli", cv.folds=3,
-                         n.trees=10000, interaction.depth=4, verbose=FALSE))
+                         n.trees=1000, interaction.depth=4, verbose=FALSE,shrinkage=0.01))
   gbm.fn <- eval(gbm.call[[1]],parent.frame())
   gbm.match <-  match.call(gbm.fn,gbm.call)
   gbm.fn.string <- paste("gbm(",do.call(paste,c(as.list(paste0(names(gbm.match),"=",as.character(gbm.match))[-1]),sep=", "  )), ")",sep="")
@@ -498,7 +655,7 @@ runGbmOnDataSet <- function(df,cols,outdir){
   
   ggplot(gbm.model.sum, aes(x=var,y=rel.inf))+geom_histogram(stat="identity") + coord_flip()+
     ggtitle(gbm.fn.string)
-  ggsave(paste(outdir,"gbmRelImp.pdf",sep="/"))
+  ggsave(paste(outdir,"gbmRelImp.pdf",sep="/"),height=10)
   
   pdf(paste(outdir,"gbmError.pdf",sep="/"),width=7,height=7)
   gbm.perf(gbm.model)
@@ -506,12 +663,53 @@ runGbmOnDataSet <- function(df,cols,outdir){
   
   write(gbm.fn.string,file=paste(outdir,"gbmCall-Short.txt",sep="/"))
   
-  
   fullCallFile <- file( paste(outdir,"gbmCall-fullSpecify.txt",sep="/"))
   saveFunArgs(fnCall = gbm.match,verbose=FALSE,    file =paste(outdir,"gbmCall-fullSpecify.txt",sep="/"))
   removeMaxFiles(paste(outdir,"gbmCall-fullSpecify.txt",sep="/"))
   close(fullCallFile)
 }
+
+
+runGbmTopFive<- function(df,cols,outdir){
+  form <- paste("label ~   ",do.call(paste, c(as.list(cols), sep=" + ")))
+  formTop5 <- gbm.id.cv.getTop5pred(form, trainData= df, cols,id=1,cv=3,shrinkage=0.01,trees=1000)
+  gbm.call <-  quote(gbm(formula(formTop5), data = df, distribution="bernoulli", cv.folds=3,
+                         n.trees=1000, interaction.depth=4, verbose=FALSE, shrinkage=0.01))
+  gbm.fn <- eval(gbm.call[[1]],parent.frame())
+  gbm.match <-  match.call(gbm.fn,gbm.call)
+  gbm.fn.string <- paste("gbm(",do.call(paste,c(as.list(paste0(names(gbm.match),"=",as.character(gbm.match))[-1]),sep=", "  )), ")",sep="")
+  
+  gbm.model <- eval(gbm.call)
+  gbm.model.sum <- summary(gbm.model)
+  
+  ggplot(gbm.model.sum, aes(x=var,y=rel.inf))+geom_histogram(stat="identity") + coord_flip()+
+    ggtitle(gbm.fn.string)
+  ggsave(paste(outdir,"gbmTop5Pred-RelImp.pdf",sep="/"),height=10)
+  
+  pdf(paste(outdir,"gbmTop5Pred-Error.pdf",sep="/"),width=7,height=7)
+  gbm.perf(gbm.model)
+  dev.off()
+  
+  write(gbm.fn.string,file=paste(outdir,"gbmTop5Pred-Call-Short.txt",sep="/"))
+  
+  fullCallFile <- file( paste(outdir,"gbmTop5Pred-Call-fullSpecify.txt",sep="/"))
+  saveFunArgs(fnCall = gbm.match,verbose=FALSE,    file =paste(outdir,"gbmTop5Pred-Call-fullSpecify.txt",sep="/"))
+  removeMaxFiles(paste(outdir,"gbmTop5Pred-all-fullSpecify.txt",sep="/"))
+  close(fullCallFile)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # eval errors w/ test case
