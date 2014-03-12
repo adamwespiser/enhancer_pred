@@ -641,6 +641,83 @@ getBestGBMparams <- function(df,cols, outdir){
 }
 
 
+
+runGbmOnTestSet <- function(df.train,df.test,cols,outfile,outdir,algo="allCols"){
+  if(!all.equal(colnames(df.train), colnames(df.test))){
+    stop("cannot use runGbmOnTest set if training and test df have different col names...")
+  }
+  
+  form <- paste("label ~   ",do.call(paste, c(as.list(cols), sep=" + ")))
+  
+  formTop5 <- gbm.id.cv.getTop5pred(form, trainData= df.train, cols,id=1,cv=3,shrinkage=0.01,trees=1000)
+  
+  gbm.call <-  quote(gbm(formula(form), data = df.train, distribution="bernoulli", cv.folds=3,
+                         n.trees=1000, interaction.depth=4, verbose=FALSE, shrinkage=0.01))
+  gbm.callTop5 <-  quote(gbm(formula(formTop5), data = df.train, distribution="bernoulli", cv.folds=3,
+                         n.trees=1000, interaction.depth=4, verbose=FALSE,shrinkage=0.01))
+  
+  gbm.fn <- eval(gbm.call[[1]],parent.frame())
+  gbm.match <-  match.call(gbm.fn,gbm.call)
+  gbm.fn.string <- paste("gbm(",do.call(paste,c(as.list(paste0(names(gbm.match),"=",as.character(gbm.match))[-1]),sep=", "  )), ")",sep="")
+  
+  gbm.top5.fn <- eval(gbm.callTop5[[1]],parent.frame())
+  gbm.matchTop5 <-  match.call(gbm.top5.fn,gbm.call)
+  gbm.fn.stringTop5 <- paste("gbm(",do.call(paste,c(as.list(paste0(names(gbm.matchTop5),"=",as.character(gbm.matchTop5))[-1]),sep=", "  )), ")",sep="")
+  
+  
+  
+  gbm.model <- eval(gbm.call)
+  gbm.modelTop5 <- eval(gbm.callTop5)
+  
+  gbm.model.sum <- summary(gbm.model)
+  ggplot(gbm.model.sum, aes(x=var,y=rel.inf))+geom_histogram(stat="identity") + coord_flip()+
+    ggtitle(gbm.fn.string)
+  ggsave(paste(outdir,"gbmRelImp.pdf",sep="/"),height=10)
+  
+  pdf(paste(outdir,"gbmError.pdf",sep="/"),width=7,height=7)
+  gbm.perf(gbm.model)
+  dev.off()
+  
+  gbm.modelTop5.sum <- summary(gbm.model)
+  ggplot(gbm.modelTop5.sum, aes(x=var,y=rel.inf))+geom_histogram(stat="identity") + coord_flip()+
+    ggtitle(gbm.fn.stringTop5)
+  ggsave(paste(outdir,"top5pred-gbmRelImp.pdf",sep="/"),height=10)
+  
+  pdf(paste(outdir,"top5pred-gbmError.pdf",sep="/"),width=7,height=7)
+  gbm.perf(gbm.modelTop5)
+  dev.off()
+  
+  
+  
+  #divisions <- 10;
+  #dim()
+  #df.test$interval <- getGroupByNumberIntervals(df.test,10)
+  
+  gbm.predict <- predict(gbm.model,
+    df.test, 
+    type="response", 
+    n.trees = gbm.perf(gbm.model,method="cv",plot.it = FALSE))
+
+  gbm.predictTop5 <- predict(gbm.model,
+                         df.test, 
+                         type="response", 
+                         n.trees = gbm.perf(gbm.model,method="cv",plot.it = FALSE))
+  
+  df.test$gbmPredict <- gbm.predict
+  df.test$gbmPredictTop5 <- gbm.predictTop5
+  exportAsTable(df=df.test,file=outfile)
+  df.test
+}
+
+getGroupByNumberIntervals <- function(df,intervals){
+  rows <- dim(df)[1]
+  breaks = rows %/%  intervals
+  as.numeric(cut(seq_len(rows),breaks=intervals))
+  
+}
+
+
+
 runGbmOnDataSet <- function(df,cols,outdir){
   form <- paste("label ~   ",do.call(paste, c(as.list(cols), sep=" + ")))
   

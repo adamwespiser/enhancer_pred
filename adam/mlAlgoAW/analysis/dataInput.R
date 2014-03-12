@@ -5,7 +5,8 @@ mouse.brain.table <<- file.path(dataFolder, "mouse_brain_master_table_raw_scores
 mouse.forebrain.table <<- file.path(dataFolder, "mouse_brain_master_table_raw_scores.forebrain_positive_and_negative.txt")
 human.brain.table <<- file.path(dataFolder, "human_brain_master_table_raw_scores.tab")
 human.heart.table <<- file.path(dataFolder, "human_heart_master_table_raw_scores.tab")
-
+mouse.test.forebrain  <- file.path(dataFolder, "mouse_test_forebrain_master_table_raw_scores.tab")
+mouse.test.heart  <- file.path(dataFolder, "mouse_test_heart_master_table_raw_scores.tab")
 
 
 

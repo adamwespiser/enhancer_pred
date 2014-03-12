@@ -77,6 +77,20 @@ exploritoryPlots <- function(df, cols, outdir, msg=""){
   
 
   
+} 
+
+exploritoryPlotsGenomeTest<- function(df, cols, outdir, msg=""){
+
+  makeDir(outdir)
+  melt.df <- melt(df[c("label", "gbmPredict", "gbmPredictTop5")], id.var = "label")
+  ggplot(melt.df, aes(x = value, fill = variable)) + 
+    geom_density(alpha=I(0.4)) + theme_bw() + 
+    ggtitle(msg)
+  ggsave(file=paste(outdir, "genomicTest-densityOfPrY=1.pdf", sep="/"))
+  
+  ggplot(melt.df, aes(x = log(value), fill = variable)) + 
+    geom_density(alpha=I(0.4)) + theme_bw() + 
+    ggtitle(msg)
+  ggsave(file=paste(outdir, "genomicTest-logDensityOfPrY=1.pdf", sep="/"))
+  
 }
-
-

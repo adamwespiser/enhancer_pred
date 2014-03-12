@@ -12,6 +12,8 @@ dataFolder <- file.path(homeFolder, "Dropbox", "enhancer_predictions")
 plotFolder <- file.path(dataFolder, "AdamPlots")
 
 getFullPlotPath <- function(subpath){ file.path(plotFolder, subpath) }
+getDropboxPath <- function(subpath){ file.path(dataFolder, subpath) }
+
 
 exportAsTable <- function(df, file){ write.table(df,file=file,quote=FALSE, row.names=FALSE,sep="\t") }
 clear <- function(save.vec=c()){ ls.vec <- ls(globalenv());del.vec <-setdiff(ls.vec,c(save.vec,"clear")); rm(list=del.vec,pos=globalenv())}
@@ -74,6 +76,47 @@ source(getFullPath("analysis/plotResults.R"))
 
 
 ## main analysis
+
+main.mouse.forebrain.test <- function(){
+  # forebrain
+  forebrain.data.dir <- makeDir(getFullPath("data/"))
+  forebrain.mldata <- paste(forebrain.data.dir,"dataForPred.tab",sep="")
+  forebrain.out.file <- getDropboxPath("mouse_test_forebrain_master_table_raw_scores_results.tab") 
+  forebrain.plots.dir <- makeDir(getFullPlotPath("gbmGenomicPrediction/mouse/forebrain/"))
+  
+  
+  forebrain.train.df <- cleanMouseForebrain()
+  forebrain.test.df <- cleanMouseForebrain(mouse.file=mouse.test.forebrain)
+  #exportAsTable(df=forebrain.df, file=forebrain.mldata)
+  
+
+  results.df <- runGbmOnTestSet(df.train=forebrain.train.df,df.test=forebrain.test.df,cols=getForebrainCols(),
+                                outfile=forebrain.out.file, outdir=forebrain.plots.dir)
+ 
+  exploritoryPlotsGenomeTest(df=results.df, cols=getForebrainCols(), outdir=forebrain.plots.dir,msg="Forebrain Data -> explore")
+  
+}
+
+main.mouse.heart.test <- function(){
+  # heart
+  heart.data.dir <- makeDir(getFullPath("data//"))
+  heart.mldata <- paste(heart.data.dir,"dataForPred.tab",sep="")
+  heart.out.file <- getDropboxPath("mouse_test_heart_master_table_raw_scores_results.tab") 
+  heart.plots.dir <- makeDir(getFullPlotPath("gbmGenomicPrediction/mouse/heart/"))
+  
+  
+  heart.train.df <- cleanMouseHeart()
+  heart.test.df <- cleanMouseHeart(mouse.file=mouse.test.heart)
+  #exportAsTable(df=heart.df, file=heart.mldata)
+  
+  # run algorithms "trials" number of times -> save result
+  
+  results.df <- runGbmOnTestSet(df.train=heart.train.df,df.test=heart.test.df,cols=getHeartCols(),
+                                outfile=heart.out.file, outdir=heart.plots.dir)
+ 
+  exploritoryPlotsGenomeTest(df=results.df, cols=getHeartCols(), outdir=heart.plots.dir,msg="Heart Data -> test on genome")
+
+}
 
 main.heart <- function(){
   # heart
@@ -186,7 +229,7 @@ modelGBM <- function(){
                   "brain"=cleanMouseBrain(),
                   "heart"=cleanMouseHeart() )
 
-  dir.list <- list("forebrain"= makeDir(getFullPlotPath("gbm/mouse/forebrain"/)),
+  dir.list <- list("forebrain"= makeDir(getFullPlotPath("gbm/mouse/forebrain/")),
                    "brain"=makeDir(getFullPlotPath("gbm/mouse/brain/")),
                    "heart"=makeDir(getFullPlotPath("gbm/mouse/heart/")) )
 
