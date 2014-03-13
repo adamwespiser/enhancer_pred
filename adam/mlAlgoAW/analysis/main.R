@@ -118,6 +118,31 @@ main.mouse.heart.test <- function(){
 
 }
 
+
+main.human.heart.test <- function(){
+  # heart
+  heart.data.dir <- makeDir(getFullPath("data/"))
+  heart.mldata <- paste(heart.data.dir,"dataForPred.tab",sep="")
+  heart.out.file <- getDropboxPath("human_test_heart_master_table_raw_scores_results.tab") 
+  heart.plots.dir <- makeDir(getFullPlotPath("gbmGenomicPrediction/human/heart/"))
+  
+  
+  heart.train.df <- cleanHumanHeart()
+  heart.test.df <- cleanHumanHeart(human.file=human.test.heart)
+  heart.test.df$label <- NULL
+  colnames(heart.test.df)[5] <- "label"
+  colnames(heart.test.df) <- colnames(heart.train.df)
+  #exportAsTable(df=heart.df, file=heart.mldata)
+  
+  # run algorithms "trials" number of times -> save result
+  
+  results.df <- runGbmOnTestSet(df.train=heart.train.df,df.test=heart.test.df,cols=getHeartCols(),
+                                outfile=heart.out.file, outdir=heart.plots.dir)
+  
+  exploritoryPlotsGenomeTest(df=results.df, cols=getHeartCols(), outdir=heart.plots.dir,msg="Heart Data -> test on genome")
+}
+
+
 main.heart <- function(){
   # heart
   heart.data.dir <- makeDir(getFullPath("data/heart/"))
@@ -302,6 +327,12 @@ runHuman <- function(){
   
 }
 
-
-
+runPredOnGenomeData <- function(){
+  cat("mouse heart")
+  main.mouse.heart.test()
+  cat("mouse forebrain")
+  main.mouse.forebrain.test()
+  cat("human heart")
+  main.human.heart.test()
+}
 
