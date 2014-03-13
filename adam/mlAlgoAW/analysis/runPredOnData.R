@@ -698,10 +698,10 @@ runGbmOnTestSet <- function(df.train,df.test,cols,outfile,outdir,algo="allCols")
     type="response", 
     n.trees = gbm.perf(gbm.model,method="cv",plot.it = FALSE))
 
-  gbm.predictTop5 <- predict(gbm.model,
+  gbm.predictTop5 <- predict(gbm.modelTop5,
                          df.test, 
                          type="response", 
-                         n.trees = gbm.perf(gbm.model,method="cv",plot.it = FALSE))
+                         n.trees = gbm.perf(gbm.modelTop5,method="cv",plot.it = FALSE))
   
   df.test$gbmPredict <- gbm.predict
   df.test$gbmPredictTop5 <- gbm.predictTop5
