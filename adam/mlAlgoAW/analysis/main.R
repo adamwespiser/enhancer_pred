@@ -139,7 +139,7 @@ main.human.heart.test <- function(){
   results.df <- runGbmOnTestSet(df.train=heart.train.df,df.test=heart.test.df,cols=getHeartColsHuman(),
                                 outfile=heart.out.file, outdir=heart.plots.dir)
   
-  exploritoryPlotsGenomeTest(df=results.df, cols=getHeartCols(), outdir=heart.plots.dir,msg="Heart Data -> test on genome")
+  exploritoryPlotsGenomeTest(df=results.df, cols=getHeartColsHuman(), outdir=heart.plots.dir,msg="Heart Data -> test on genome")
 }
 
 

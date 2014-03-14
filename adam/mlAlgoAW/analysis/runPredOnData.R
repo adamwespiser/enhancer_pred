@@ -333,7 +333,7 @@ gbm.id.cv.getTop5pred <- function(form, trainData, cols,id=1,cv=3,shrinkage=0.00
   
   formTop5 <- paste("label ~   ",do.call(paste, c(as.list(cols[gbm.colRank <= 5]), sep=" + ")))
   
-  form
+  formTop5
   
 }
 
@@ -648,8 +648,8 @@ runGbmOnTestSet <- function(df.train,df.test,cols,outfile,outdir,algo="allCols")
   }
   
   form <- paste("label ~   ",do.call(paste, c(as.list(cols), sep=" + ")))
+  formTop5 <- gbm.id.cv.getTop5pred(form, trainData= df.train, cols,id=4,cv=3,shrinkage=0.01,trees=1000)
   
-  formTop5 <- gbm.id.cv.getTop5pred(form, trainData= df.train, cols,id=1,cv=3,shrinkage=0.01,trees=1000)
   
   gbm.call <-  quote(gbm(formula(form), data = df.train, distribution="bernoulli", cv.folds=3,
                          n.trees=1000, interaction.depth=4, verbose=FALSE, shrinkage=0.01))
@@ -661,9 +661,8 @@ runGbmOnTestSet <- function(df.train,df.test,cols,outfile,outdir,algo="allCols")
   gbm.fn.string <- paste("gbm(",do.call(paste,c(as.list(paste0(names(gbm.match),"=",as.character(gbm.match))[-1]),sep=", "  )), ")",sep="")
   
   gbm.top5.fn <- eval(gbm.callTop5[[1]],parent.frame())
-  gbm.matchTop5 <-  match.call(gbm.top5.fn,gbm.call)
+  gbm.matchTop5 <-  match.call(gbm.top5.fn,gbm.callTop5)
   gbm.fn.stringTop5 <- paste("gbm(",do.call(paste,c(as.list(paste0(names(gbm.matchTop5),"=",as.character(gbm.matchTop5))[-1]),sep=", "  )), ")",sep="")
-  
   
   
   gbm.model <- eval(gbm.call)
@@ -749,7 +748,7 @@ runGbmOnDataSet <- function(df,cols,outdir){
 
 runGbmTopFive<- function(df,cols,outdir){
   form <- paste("label ~   ",do.call(paste, c(as.list(cols), sep=" + ")))
-  formTop5 <- gbm.id.cv.getTop5pred(form, trainData= df, cols,id=1,cv=3,shrinkage=0.01,trees=1000)
+  formTop5 <- gbm.id.cv.getTop5pred(form, trainData= df, cols,id=4,cv=3,shrinkage=0.01,trees=1000)
   gbm.call <-  quote(gbm(formula(formTop5), data = df, distribution="bernoulli", cv.folds=3,
                          n.trees=1000, interaction.depth=4, verbose=FALSE, shrinkage=0.01))
   gbm.fn <- eval(gbm.call[[1]],parent.frame())
