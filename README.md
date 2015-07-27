@@ -1,7 +1,7 @@
 #Enhancer Prediction Project
 
 # Objective
-## Find regions of the genome likely to be enhancer in different cell types and species, critical regions responsible for regulating a cell's protein production. 
+## Find regions of the genome likely to be enhancer regions in different cell types and species, critical regions responsible for regulating a cell's protein production. 
 
 # Approach:
 ## Use a training set of known enhancers, then make predictions on the mouse genome. The predictions from our group, along with others, will be combined, and the most predicted regions will be tested in vivo for enhancer activity. 
