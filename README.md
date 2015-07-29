@@ -1,5 +1,7 @@
 ##Enhancer Prediction Project
 
+[file manifest](./docs/file-manifest.md)
+
 ### Objective
  Find regions of the genome likely to be enhancer regions in different cell types and species, critical regions responsible for regulating a cell's protein production. 
 
